@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 
@@ -13,14 +13,17 @@ if not mt5.initialize():
     mt5.shutdown()
     raise RuntimeError('MetaTrader failed to initialize')
 
-def _parser(symbol, args:dict) -> dict:
+def _parser(symbol:str, args:dict | None = None) -> dict:
     # ensure list
     try:
         symbol = eval(symbol)
     except NameError:
-        symbol = [symbol]
+        symbol = [symbol.upper()]
 
     date_fields =  ['date_from', 'date_to']
+
+    if args is None:
+        return symbol
 
     for param, value in args.items():
         # parse
@@ -42,20 +45,64 @@ def _parser(symbol, args:dict) -> dict:
 
 @app.get('/')
 def index():
-    return 'marketdata API'
+    return mt5.version()
 
+# Symbols
 @app.get('/symbols/')
-def get_symbol(group:str | None = None) -> list:
+async def get_symbols(group:str | None = None) -> list:
     if group is not None:
-        ans = mt5.symbols_get(group)
+        ans = mt5.symbols_get(group.upper())
     else:
         ans = mt5.symbols_get()
     ans = [a._asdict() for a in ans]
     return ans
 
+@app.get('/symbols/total/')
+async def get_symbols() -> int:
+    return mt5.symbols_total()
+
+@app.get('/symbol/info/{symbol}')
+async def get_symbol_info(symbol:str) -> dict[str, dict | None]:
+    symbol = _parser(symbol)
+    info = {}
+    for s in symbol:
+        temp = mt5.symbol_info(s)
+        if temp is not None:
+            temp = temp._asdict()
+        info[s] = temp
+    return info
+
+@app.get('/symbol/info/tick/{symbol}')
+async def get_symbol_info_tick(symbol:str) -> dict[str, dict | None]:
+    symbol = _parser(symbol)
+    info = {}
+    for s in symbol:
+        temp = mt5.symbol_info_tick(s)
+        if temp is not None:
+            temp = temp._asdict()
+        info[s] = temp
+    return info
+
+# Book
+
+@app.get('/book/{symbol}')
+async def get_book(symbol: str) -> dict[str, str | None]:
+    symbol = _parser(symbol)
+    book = {}
+    for s in symbol:
+        mt5.market_book_add(s)
+        temp = mt5.market_book_get(s)
+        mt5.market_book_release(s)
+        if temp is not None:
+            temp = [b._asdict() for b in temp]
+            temp = pd.DataFrame(temp).to_json()
+        book[s] = temp
+    return book
+
+
 # Rates
 @app.get('/rates/range/{symbol}')
-def get_rates_range(
+async def get_rates_range(
     symbol: str,
     timeframe: str | None = None,
     date_from: str | None = None,
@@ -83,7 +130,7 @@ def get_rates_range(
     return rates
 
 @app.get('/rates/from/{symbol}')
-def get_rates_from(
+async def get_rates_from(
     symbol: str,
     timeframe: str | None = None,
     date_from: str | None = None,
@@ -96,9 +143,9 @@ def get_rates_from(
     symbol, args = _parser(symbol, args)
     # query
     rates = {}
-    for symbol in symbol:
+    for s in symbol:
         temp = mt5.copy_rates_from(
-            symbol,
+            s,
             args['timeframe'],
             args['date_from'],
             args['count']
@@ -107,11 +154,11 @@ def get_rates_from(
             temp = pd.DataFrame(temp).to_json()
         else:
             temp = None
-        rates[symbol] = temp
+        rates[s] = temp
     return rates
 
 @app.get('/rates/from/pos/{symbol}')
-def get_rates_from_pos(
+async def get_rates_from_pos(
     symbol: str,
     timeframe: str | None = None,
     start_pos: int | None = None,
@@ -124,9 +171,9 @@ def get_rates_from_pos(
     symbol, args = _parser(symbol, args)
     # query
     rates = {}
-    for symbol in symbol:
+    for s in symbol:
         temp = mt5.copy_rates_from_pos(
-            symbol,
+            s,
             args['timeframe'],
             args['start_pos'],
             args['count']
@@ -135,12 +182,12 @@ def get_rates_from_pos(
             temp = pd.DataFrame(temp).to_json()
         else:
             temp = None
-        rates[symbol] = temp
+        rates[s] = temp
     return rates
 
 # Ticks
 @app.get('/ticks/range/{symbol}')
-def get_ticks_range(
+async def get_ticks_range(
     symbol: str,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -153,9 +200,9 @@ def get_ticks_range(
     symbol, args = _parser(symbol, args)
     # query
     rates = {}
-    for symbol in symbol:
+    for s in symbol:
         temp = mt5.copy_ticks_range(
-            symbol,
+            s,
             args['date_from'],
             args['date_to'],
             args['flags']
@@ -164,11 +211,11 @@ def get_ticks_range(
             temp = pd.DataFrame(temp).to_json()
         else:
             temp = None
-        rates[symbol] = temp
+        rates[s] = temp
     return rates
 
 @app.get('/ticks/from/{symbol}')
-def get_ticks_from(
+async def get_ticks_from(
     symbol: str,
     date_from: str | None = None,
     count: int | None = None,
@@ -181,9 +228,9 @@ def get_ticks_from(
     symbol, args = _parser(symbol, args)
     # query
     rates = {}
-    for symbol in symbol:
+    for s in symbol:
         temp = mt5.copy_ticks_from(
-            symbol,
+            s,
             args['date_from'],
             args['count'],
             args['flags']
@@ -192,5 +239,5 @@ def get_ticks_from(
             temp = pd.DataFrame(temp).to_json()
         else:
             temp = None
-        rates[symbol] = temp
+        rates[s] = temp
     return rates
