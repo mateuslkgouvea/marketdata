@@ -1,8 +1,8 @@
 import requests
 import json
 
-
-token_path = 'http://127.0.0.1:8000/token'
+address = 'http://localhost:5000'
+token_path = f'{address}/token'
 username = 'example_user'
 password = 'password'
 
@@ -29,7 +29,7 @@ def api_request(endpoint:str, token:str):
     return response
 
 
-endpoint = 'http://127.0.0.1:8000/mt5/rates/range/PETR4'
+endpoint = f'{address}/mt5/rates/range/PETR4'
 token = login(username, password)
 response = api_request(endpoint, token)
 print(response.__dict__)
