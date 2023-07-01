@@ -1,3 +1,4 @@
 md_env/
 __pycache__/
 marketdata/__pycache__/
+records.json
