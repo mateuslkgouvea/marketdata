@@ -1,7 +1,7 @@
 import requests
 import json
 
-address = 'http://localhost:5000'
+address = 'http://192.168.1.4:5000'
 token_path = f'{address}/token'
 username = 'example_user'
 password = 'password'
