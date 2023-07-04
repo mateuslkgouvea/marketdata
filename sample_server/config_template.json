@@ -1,0 +1,2 @@
+{"DATA_PATH": "path/to/data/",
+ "SECRET_KEY": "fake_secret_key"}
