@@ -1,7 +1,9 @@
 import os
 import json
 
-PATH = os.environ['MD_DATA_PATH']
+from marketdata import config
+
+PATH = config['DATA_PATH']
 FILE_NAME = 'records.json'
 RECORDS_PATH = f'{PATH}/{FILE_NAME}'
 
@@ -19,5 +21,3 @@ if not os.path.exists(RECORDS_PATH):
 
 with open(RECORDS_PATH, 'r') as file:
     records = json.load(file)
-
-

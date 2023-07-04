@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Annotated
-import os
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -8,11 +7,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from marketdata import config
 from .user_data import records
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 ALGORITHM = "HS256"
-SECRET_KEY = os.environ['MD_SERVER_KEY']
+SECRET_KEY = config['marketdata']
 
 
 class Token(BaseModel):
