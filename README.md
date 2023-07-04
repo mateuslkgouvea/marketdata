@@ -29,7 +29,7 @@ requests.get('yourserver/mt5/rates/from/PETR4?date_from=2023-1-1&date_to=2023-6-
 ```
 
 # Server-side
-The marketdata package contained on this repository handles de server-side tasks.
+The marketdata package contained on this repository handles the server-side tasks.
 To set the server on a localhost you need to define a system variable on your machine named "MT_SERVER_CONF" with the path of a JSON config file (templates are on the sample_server folder).
 define the variables:
 
