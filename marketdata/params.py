@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
 from pytz import timezone
 import MetaTrader5 as mt5
