@@ -1,35 +1,49 @@
 import requests
-import json
 
-address = 'http://localhost:80'
-token_path = f'{address}/token'
-username = 'example_user'
-password = 'password'
+SERVER_ADDRESS = 'http://localhost:80'
+TOKEN_PATH = f'{SERVER_ADDRESS}/token'
 
-def login(username:str, password:str):
-    credentials = f'username={username}&password={password}'
-    headers = {'accept':'application/json',
-               'Content-Type': 'application/x-www-form-urlencoded'}
-    response = requests.post(token_path, headers = headers, data = credentials)
-    if not response.ok:
-        print(f'login failed: {response.status_code} {response.reason}')
-        return
+class NotLoggedin(Exception):
+    pass
+
+class LogInError(Exception):
+    pass
+
+class Client:
+
+    token:dict[str,str] | None = None
+
+    def __init__(self, username:str, password:str):
+        self.username = username
+        self.password = password
     
-    token_info = eval(response.content)
-    token_type = token_info['token_type']
-    token = token_info['access_token']
-    token_info['header'] = f'{token_type} {token}' 
-    return token_info
+    def login(self):
+        credentials = f'username={self.username}&password={self.password}'
+        headers = {'accept':'application/json',
+                   'Content-Type': 'application/x-www-form-urlencoded'}
+        response = requests.post(TOKEN_PATH, headers = headers, data = credentials)
+        if not response.ok:
+            raise LogInError(f'login failed: {response.status_code} {response.reason}')
+        
+        token = eval(response.content)
+        token_type = token['token_type']
+        access_token = token['access_token']
+        token['header'] = f'{token_type} {access_token}' 
+        self.token = token
 
+    def request(self, endpoint:str):
+        if self.token is None:
+            raise NotLoggedin("Efetuar login")
+        
+        query_header = {'accept':'application/json',
+                        'Authorization': self.token['header']}
+        response = requests.get(endpoint, headers = query_header)
+        self.last_response = response
+        return response
+    
 
-def api_request(endpoint:str, token:str):
-    query_header = {'accept':'application/json',
-                    'Authorization': token['header']}
-    response = requests.get(endpoint, headers = query_header)
-    return response
-
-
-endpoint = f'{address}/mt5/rates/range/PETR4'
-token = login(username, password)
-response = api_request(endpoint, token)
+endpoint = f'{SERVER_ADDRESS}/mt5/rates/range/PETR4'
+client = Client('example_user', 'user_password')
+client.login()
+response = client.request(endpoint)
 print(response.__dict__)
