@@ -35,15 +35,9 @@ class Client:
         if self.token is None:
             raise NotLoggedin("Efetuar login")
         
+        url =  f'{SERVER_ADDRESS}{endpoint}'
         query_header = {'accept':'application/json',
                         'Authorization': self.token['header']}
-        response = requests.get(endpoint, headers = query_header)
+        response = requests.get(url, headers = query_header)
         self.last_response = response
         return response
-    
-
-endpoint = f'{SERVER_ADDRESS}/mt5/rates/range/PETR4'
-client = Client('example_user', 'user_password')
-client.login()
-response = client.request(endpoint)
-print(response.__dict__)
