@@ -8,10 +8,11 @@
 API for MetaTrader5 data query, built with FastApi framework
 
 # Overview
-Once you set the server-side (e.g on a localhost) the api comunicates with the main MetaTrader5 functions and returns a JSON file with {"Ticker":data}
+Once you set the server-side (e.g on a localhost) the api comunicates with the main MetaTrader5 functions and returns a JSON file with {"Ticker":data} format.
 Most of the responses comunicate with Pandas dataframes by using pd.read_json().
 
 ## MetaTrader5
+a sample request using the MetaTrader5 library:
 ```python
 import MetaTrader5 as mt5
 import datetime
@@ -32,7 +33,7 @@ The marketdata package contained on this repository handles de server-side tasks
 To set the server on a localhost you need to define a system variable on your machine named "MT_SERVER_CONF" with the path of a JSON config file (templates are on the sample_server folder).
 define the variables:
 
-- DATA_PATH: path to store username and hashed passwords on a JSON file named records.json (can be the same as MT_SERVER_CONF
+- DATA_PATH: path to store username and hashed passwords on a JSON file named records.json (can be the same as MT_SERVER_CONF path
 - SECRET_KEY: randon hexadecimal variable for encryption algorythm
 
 the server_side.py module contains a simple uvicorn instruction to run the API on the desired IP and Port.
@@ -41,7 +42,7 @@ the server_side.py module contains a simple uvicorn instruction to run the API o
 marketdata uses a password flow handled by FastApi OAuth2 scheme, the user trying to access the protected api can user the Client class on the client_side.py module. The Client class handles the login request, token info and request headers to make things easy e.g.:
 
 ```python
-from client-side import Client
+from client_side import Client
 
 client = Client('example_user', 'user_password')
 client.login()
