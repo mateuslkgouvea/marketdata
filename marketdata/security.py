@@ -12,7 +12,7 @@ from .user_data import records
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 ALGORITHM = "HS256"
-SECRET_KEY = config['marketdata']
+SECRET_KEY = config['SECRET_KEY']
 
 
 class Token(BaseModel):
